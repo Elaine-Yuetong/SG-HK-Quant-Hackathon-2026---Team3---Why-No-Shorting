@@ -48,7 +48,7 @@ from bot_executor import (
 # Configuration
 # ============================================================
 
-REBALANCE_INTERVAL_SECONDS = 60  # Rebalance every hour
+REBALANCE_INTERVAL_SECONDS = 3600  # Rebalance every hour
 MIN_DATA_POINTS = 50               # Minimum data points for strategy
 STATE_FILE = "state.json"          # File to save state for recovery
 DATA_DIR = "historical_data"       # Directory with historical data
