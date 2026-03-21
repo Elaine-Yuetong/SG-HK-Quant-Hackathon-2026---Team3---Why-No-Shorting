@@ -3710,3 +3710,61 @@ UnboundLocalError: cannot access local variable 'prices' where it is not associa
 2026-03-21 18:53:12.207 [__main__] INFO:   Current capital: $49,637.94
 2026-03-21 18:53:12.207 [__main__] INFO:   Return: -0.72%
 2026-03-21 18:53:12.223 [__main__] INFO: 💤 Sleeping for 1 minutes...
+2026-03-21 18:54:12.228 [__main__] INFO: 
+============================================================
+2026-03-21 18:54:12.228 [__main__] INFO: 🔄 Trading Cycle #17
+2026-03-21 18:54:12.229 [__main__] INFO:   Time: 2026-03-21 18:54:12
+2026-03-21 18:54:12.229 [__main__] INFO: ============================================================
+2026-03-21 18:54:12.354 [bot_executor] INFO: Portfolio: 6 assets, cash=$4964.09
+2026-03-21 18:54:12.519 [bot_executor] INFO: Portfolio: 6 assets, cash=$4964.09
+2026-03-21 18:54:12.520 [__main__] INFO: 💰 Current portfolio: 6 assets, cash=$4,964.09
+2026-03-21 18:54:12.596 [__main__] INFO: 📊 Fetched prices for 17 coins
+2026-03-21 18:54:12.596 [__main__] INFO: Holdings: {'BTC': 0.10549, 'HBAR': 80406.0, 'PAXG': 1.6519, 'STO': 76216.8, 'TRX': 24020.6, 'VIRTUAL': 10735.8}
+2026-03-21 18:54:12.596 [__main__] INFO: Prices sample: ['BTC/USD', 'HBAR/USD', 'PAXG/USD', 'STO/USD', 'TRX/USD']
+2026-03-21 18:54:12.786 [__main__] DEBUG: Loaded XPL: 43201 rows
+2026-03-21 18:54:13.000 [__main__] DEBUG: Loaded PENGU: 43201 rows
+2026-03-21 18:54:13.209 [__main__] DEBUG: Loaded PUMP: 43201 rows
+2026-03-21 18:54:13.378 [__main__] DEBUG: Loaded STO: 43201 rows
+2026-03-21 18:54:13.576 [__main__] DEBUG: Loaded VIRTUAL: 43201 rows
+2026-03-21 18:54:13.776 [__main__] DEBUG: Loaded TAO: 43201 rows
+2026-03-21 18:54:13.970 [__main__] DEBUG: Loaded ZEC: 43201 rows
+2026-03-21 18:54:14.156 [__main__] DEBUG: Loaded TRX: 43201 rows
+2026-03-21 18:54:14.333 [__main__] DEBUG: Loaded BTC: 43201 rows
+2026-03-21 18:54:14.497 [__main__] DEBUG: Loaded PAXG: 43201 rows
+2026-03-21 18:54:14.694 [__main__] DEBUG: Loaded FLOKI: 43201 rows
+2026-03-21 18:54:14.884 [__main__] DEBUG: Loaded ETH: 43201 rows
+2026-03-21 18:54:15.059 [__main__] DEBUG: Loaded BNB: 43201 rows
+2026-03-21 18:54:15.242 [__main__] DEBUG: Loaded HBAR: 43201 rows
+2026-03-21 18:54:15.480 [__main__] DEBUG: Loaded 1000CHEEMS: 43201 rows
+2026-03-21 18:54:15.653 [__main__] DEBUG: Loaded WIF: 43201 rows
+2026-03-21 18:54:15.812 [__main__] DEBUG: Loaded EIGEN: 43201 rows
+2026-03-21 18:54:15.812 [__main__] INFO: Loaded data for 17/17 coins
+2026-03-21 18:54:15.813 [__main__] DEBUG: XPL/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.814 [__main__] DEBUG: PENGU/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.815 [__main__] DEBUG: PUMP/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.816 [__main__] DEBUG: STO/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.816 [__main__] DEBUG: VIRTUAL/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.817 [__main__] DEBUG: TAO/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.818 [__main__] DEBUG: ZEC/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.819 [__main__] DEBUG: TRX/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.819 [__main__] DEBUG: BTC/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.820 [__main__] DEBUG: PAXG/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.823 [__main__] DEBUG: HBAR/USD: signal=1, multiplier=1.0
+2026-03-21 18:54:15.826 [__main__] DEBUG: EIGEN/USD: signal=-1, multiplier=1.0
+2026-03-21 18:54:15.826 [__main__] INFO: 📈 Signals: 6 BUY, 11 HOLD/SELL
+2026-03-21 18:54:15.826 [__main__] INFO: 🎯 Target weights: {'STO/USD': 0.15, 'VIRTUAL/USD': 0.15, 'TRX/USD': 0.15, 'BTC/USD': 0.15, 'PAXG/USD': 0.15, 'HBAR/USD': 0.15, 'cash': 0.1}
+2026-03-21 18:54:15.826 [bot_executor] INFO: 📈 BUY 76.315085 STO @ $0.10
+2026-03-21 18:54:16.709 [bot_executor] INFO: ✅ BUY 76.3 STO/USD @ 0.0977
+2026-03-21 18:54:16.712 [risk_manager] DEBUG: Recorded entry for STO @ $0.10
+2026-03-21 18:54:16.712 [bot_executor] DEBUG: Skip VIRTUAL: trade value $0.14 < $1.00
+2026-03-21 18:54:16.712 [bot_executor] INFO: 📉 SELL 23.796802 TRX @ $0.31
+2026-03-21 18:54:17.512 [bot_executor] INFO: ✅ SELL 23.8 TRX/USD @ 0.3103
+2026-03-21 18:54:17.514 [bot_executor] DEBUG: Skip BTC: trade value $0.37 < $1.00
+2026-03-21 18:54:17.515 [bot_executor] DEBUG: Skip PAXG: trade value $0.21 < $1.00
+2026-03-21 18:54:17.515 [bot_executor] DEBUG: Skip HBAR: trade value $0.61 < $1.00
+2026-03-21 18:54:17.515 [__main__] INFO: ✅ Rebalance complete: 6 trades
+2026-03-21 18:54:17.691 [bot_executor] INFO: Portfolio: 6 assets, cash=$4964.00
+2026-03-21 18:54:17.803 [__main__] INFO: ✅ Cycle completed in 5.6s
+2026-03-21 18:54:17.803 [__main__] INFO:   Current capital: $49,643.76
+2026-03-21 18:54:17.803 [__main__] INFO:   Return: -0.71%
+2026-03-21 18:54:17.832 [__main__] INFO: 💤 Sleeping for 1 minutes...
