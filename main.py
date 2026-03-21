@@ -138,7 +138,6 @@ def load_coin_data(coin: str, lookback_days: int = HISTORY_DAYS) -> Optional[pd.
     
     # Try different filename patterns
     possible_files = [
-        Path(DATA_DIR) / f"{clean_coin}_1m.csv",
         Path(DATA_DIR) / f"{clean_coin}USDT_1m.csv",
         Path(DATA_DIR) / f"{clean_coin}_1m.csv",
         Path(DATA_DIR) / f"{coin}_1m.csv",
