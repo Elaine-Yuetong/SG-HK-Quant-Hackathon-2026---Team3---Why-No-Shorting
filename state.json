@@ -1,0 +1,105 @@
+{
+  "last_run": "2026-03-21T18:53:00.939582",
+  "portfolio": {
+    "BTC": 0.10552,
+    "HBAR": 80434.0,
+    "PAXG": 1.6524,
+    "STO": 76087.9,
+    "TRX": 24036.8,
+    "VIRTUAL": 10733.2
+  },
+  "cash": 4966.54,
+  "last_prices": {
+    "BTC/USD": 70590.4,
+    "HBAR/USD": 0.09261,
+    "PAXG/USD": 4507.72,
+    "STO/USD": 0.0977,
+    "TRX/USD": 0.31,
+    "VIRTUAL/USD": 0.6936,
+    "XPL/USD": 0.0944,
+    "PENGU/USD": 0.007059,
+    "PUMP/USD": 0.00187,
+    "TAO/USD": 269.3,
+    "ZEC/USD": 233.78,
+    "FLOKI/USD": 2.968e-05,
+    "ETH/USD": 2153.33,
+    "BNB/USD": 642.86,
+    "1000CHEEMS/USD": 0.000462,
+    "WIF/USD": 0.179,
+    "EIGEN/USD": 0.201
+  },
+  "last_signals": {
+    "XPL/USD": [
+      -1,
+      1.0
+    ],
+    "PENGU/USD": [
+      -1,
+      1.0
+    ],
+    "PUMP/USD": [
+      -1,
+      1.0
+    ],
+    "STO/USD": [
+      1,
+      1.0
+    ],
+    "VIRTUAL/USD": [
+      1,
+      1.0
+    ],
+    "TAO/USD": [
+      -1,
+      1.0
+    ],
+    "ZEC/USD": [
+      -1,
+      1.0
+    ],
+    "TRX/USD": [
+      1,
+      1.0
+    ],
+    "BTC/USD": [
+      1,
+      1.0
+    ],
+    "PAXG/USD": [
+      1,
+      1.0
+    ],
+    "FLOKI/USD": [
+      0,
+      1.0
+    ],
+    "ETH/USD": [
+      0,
+      1.0
+    ],
+    "BNB/USD": [
+      0,
+      1.0
+    ],
+    "HBAR/USD": [
+      1,
+      1.0
+    ],
+    "1000CHEEMS/USD": [
+      0,
+      1.0
+    ],
+    "WIF/USD": [
+      0,
+      1.0
+    ],
+    "EIGEN/USD": [
+      -1,
+      1.0
+    ]
+  },
+  "iteration_count": 36,
+  "total_trades": 216,
+  "last_update": "2026-03-21T18:53:11.955945",
+  "last_save": "2026-03-21T18:53:11.955961"
+}
