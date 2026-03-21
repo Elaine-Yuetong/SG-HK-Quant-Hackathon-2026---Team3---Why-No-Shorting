@@ -29,8 +29,8 @@ logger.add(
 # Roostoo API
 # ──────────────────────────────────────────────
 ROOSTOO_BASE_URL = "https://mock-api.roostoo.com"
-ROOSTOO_API_KEY = "9q1LSYAYU5By23jB1mNOx8ZesXZN8I810iNZKLGKebAHVFGlxLLtvFOeFrPRwVAF"
-ROOSTOO_SECRET_KEY = "4qSaoUaxTQu3bUs4XooWFLkUMdxYzzt6eVi4V5lOJx143ASxkrrS4yH1kGViEmA5"
+ROOSTOO_API_KEY = "6U96yXYBuLfEqhVV59JC7zfJUxSJBGOxSXu7rwtmAI0AhMoNb5tngGYaaHv7MLX1"
+ROOSTOO_SECRET_KEY = "dfXy4hs3yIW8PKzCpIyl4cV9vforiNLrO7heqOccw0kUgSFJOBLyJqNnvDBmhlld"
 
 # ──────────────────────────────────────────────
 # Binance Public API
