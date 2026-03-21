@@ -332,6 +332,14 @@ class TradingExecutor:
         diff = target_quantity - current_quantity
         if abs(diff) < 0.000001:
             return
+        # calculate trading amount
+        trade_value = abs(diff) * current_price
+    
+        # minimum trading amount filter
+        if trade_value < 1.0:
+            logger.debug(f"Skip {coin}: trade value ${trade_value:.2f} < $1.00")
+            return
+
         
         if diff > 0:
             # Buy
