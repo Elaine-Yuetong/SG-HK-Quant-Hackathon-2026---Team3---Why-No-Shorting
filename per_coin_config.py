@@ -202,12 +202,11 @@ def get_risk_level(coin: str) -> str:
 
 # All coins that passed the filter (positive expected return, not in AVOID list)
 CANDIDATE_COINS = [
-    'XPLUSDT', 'PENGUUSDT', 'PUMPUSDT', 'STOUSDT', 'VIRTUALUSDT',
-    'TAOUSDT', 'ZECUSDT', 'TRXUSDT', 'BTCUSDT', 'PAXGUSDT',
-    'FLOKIUSDT', 'ETHUSDT', 'BNBUSDT', 'HBARUSDT',
-    '1000CHEEMSUSDT', 'WIFUSDT', 'EIGENUSDT'
+    'XPL/USD', 'PENGU/USD', 'PUMP/USD', 'STO/USD', 'VIRTUAL/USD',
+    'TAO/USD', 'ZEC/USD', 'TRX/USD', 'BTC/USD', 'PAXG/USD',
+    'FLOKI/USD', 'ETH/USD', 'BNB/USD', 'HBAR/USD',
+    '1000CHEEMS/USD', 'WIF/USD', 'EIGEN/USD'
 ]
-
 # Target number of coins after QUBO optimization
 TARGET_N_COINS = 8
 
