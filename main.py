@@ -48,14 +48,14 @@ from bot_executor import (
 # Configuration
 # ============================================================
 
-REBALANCE_INTERVAL_SECONDS = 60  # Rebalance every hour
+REBALANCE_INTERVAL_SECONDS = 3600  # Rebalance every hour
 MIN_DATA_POINTS = 50               # Minimum data points for strategy
 STATE_FILE = "state.json"          # File to save state for recovery
 DATA_DIR = "historical_data"       # Directory with historical data
 HISTORY_DAYS = 30                  # Days of data to load
 
 # Risk parameters
-INITIAL_CAPITAL = 50000        # Starting capital
+INITIAL_CAPITAL = 1000000        # Starting capital
 MAX_POSITION_PCT = 0.20            # Max 20% per coin
 MIN_POSITION_PCT = 0.05            # Min 5% per coin
 

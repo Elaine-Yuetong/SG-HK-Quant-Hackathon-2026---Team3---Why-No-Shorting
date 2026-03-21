@@ -25,7 +25,7 @@ class RiskManager:
         self,
         initial_capital: float = 1_000_000,
         daily_loss_limit: float = 0.05,      # 5% daily loss = stop trading
-        total_loss_limit: float = 1,      # 15% total loss = stop all
+        total_loss_limit: float = 0.15,      # 15% total loss = stop all
         per_coin_stop_loss: float = 0.10,    # 10% loss = sell that coin
         drawdown_reduce_threshold: float = 0.10,  # 10% drawdown = half positions
         cooldown_hours: int = 2,             # Cooldown after loss
