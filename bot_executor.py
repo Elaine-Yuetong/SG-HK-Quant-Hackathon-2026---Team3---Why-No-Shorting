@@ -327,32 +327,31 @@ class TradingExecutor:
         current_price: float
     ):
         """
-        Execute trade to reach target quantity.
+            Execute trade to reach target quantity.
         """
         diff = target_quantity - current_quantity
         if abs(diff) < 0.000001:
             return
-        # calculate trading amount
+    # calculate trading amount
         trade_value = abs(diff) * current_price
-    
-        # minimum trading amount filter
+
+    # minimum trading amount filter
         if trade_value < 1.0:
             logger.debug(f"Skip {coin}: trade value ${trade_value:.2f} < $1.00")
             return
 
-        
         if diff > 0:
             # Buy
             logger.info(f"📈 BUY {diff:.6f} {coin} @ ${current_price:.2f}")
             result = place_order(coin, 'BUY', diff)
             if result and result.get('Success'):
-                self.risk_manager.record_entry(coin, current_price)
+                self.risk_manager.record_entry(coin, current_price, diff)  # 加了 diff
         else:
-            # Sell
+        # Sell
             logger.info(f"📉 SELL {-diff:.6f} {coin} @ ${current_price:.2f}")
             result = place_order(coin, 'SELL', -diff)
             if result and result.get('Success'):
-                self.risk_manager.record_exit(coin)
+                self.risk_manager.record_exit(coin, -diff)  # 加了 -diff
     
     def rebalance(
         self,
