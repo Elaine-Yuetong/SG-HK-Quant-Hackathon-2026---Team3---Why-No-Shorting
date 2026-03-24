@@ -298,6 +298,18 @@ class TradingBot:
         # Track portfolio value over time
         self.portfolio_history = []
 
+        # ========== 动态时间权重初始化 ==========
+        from time_weight import calculate_hourly_weight
+        from strategies import set_dynamic_filter
+        try:
+            logger.info("Calculating dynamic time weights...")
+            weights = calculate_hourly_weight(get_all_tradable_coins())
+            set_dynamic_filter(weights)
+            logger.info("✅ Dynamic time filter enabled")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to set dynamic filter: {e}, using static fallback")
+        # =========================================
+
         # ========== 添加这段 ==========
         # Start dashboard in background thread
         self._start_dashboard()
