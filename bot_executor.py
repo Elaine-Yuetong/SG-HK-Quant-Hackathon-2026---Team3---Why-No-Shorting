@@ -26,7 +26,7 @@ import numpy as np
 _PRECISION_CACHE = {}
 
 def _get_precision(pair: str) -> int:
-    """获取币的精度，缓存结果"""
+    """get precision of coin and reload"""
     global _PRECISION_CACHE
     if pair in _PRECISION_CACHE:
         return _PRECISION_CACHE[pair]
@@ -368,18 +368,39 @@ class TradingExecutor:
             'trades': [],
             'errors': []
         }
-        
+    
         # Calculate total portfolio value
         total_value = cash_balance
         for coin, qty in current_holdings.items():
             pair = f"{coin}/USD"
             if pair in price_data:
                 total_value += qty * price_data[pair]
-        
+    
         if total_value <= 0:
             results['errors'].append("Total portfolio value is zero")
             return results
-        
+    
+    # ========== stop loss check ==========
+    # check whether every coin start stop loss
+        for coin, qty in list(current_holdings.items()):
+            pair = f"{coin}/USD"
+            if pair in price_data:
+                current_price = price_data[pair]
+                if self.risk_manager.check_per_coin_stop(coin, current_price):
+                    # if start stop loss we sell them all
+                    logger.warning(f"🛑 STOP LOSS TRIGGERED: Selling all {coin}")
+                    result = place_order(coin, 'SELL', qty)
+                    if result and result.get('Success'):
+                        self.risk_manager.record_exit(coin, qty)
+                        results['trades'].append({
+                            'coin': coin,
+                            'action': 'STOP_LOSS',
+                            'quantity': qty,
+                            'price': current_price
+                        })
+                        # remove to avoid repetition
+                        del current_holdings[coin]
+    
         # Check kill switch
         current_capital = total_value
         killed, reason = self.risk_manager.check_kill_switch(current_capital)
@@ -387,6 +408,8 @@ class TradingExecutor:
             logger.warning(f"Kill switch active: {reason}")
             results['errors'].append(f"Kill switch: {reason}")
             return results
+    
+    
         
         # Calculate target quantities
         target_quantities = {}
