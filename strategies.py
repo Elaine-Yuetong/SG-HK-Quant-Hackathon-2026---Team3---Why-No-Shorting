@@ -313,44 +313,41 @@ def get_signal(
         return 0
 
 
+
+
 # ============================================================
-# Time Filter (Layer 3)
+# Dynamic Time Filter (Layer 3) - 动态权重
+# ============================================================
+
+from time_weight import get_dynamic_time_filter
+
+# 全局动态过滤器（需要在 main.py 初始化时设置）
+_dynamic_filter = None
+
+def set_dynamic_filter(weights: dict):
+    global _dynamic_filter
+    _dynamic_filter = get_dynamic_time_filter(weights)
+
+# ============================================================
+# Time Filter (Layer 3) - 静态版本（fallback）
 # ============================================================
 
 def apply_time_filter(signal: int, hour: Optional[int] = None) -> int:
-    """
-    Apply time filter based on Bollinger backtest results
+    if _dynamic_filter is not None:
+        return _dynamic_filter(signal, hour)
     
-    Time Filter Performance (90-day backtest):
-    - US Session (13-22): +28.67% - FULL SIGNAL
-    - Asia Session (1-8): +15.31% - HALF SIGNAL
-    - Other hours: NO TRADING
-    
-    Args:
-        signal: Raw signal from strategy (1, -1, 0)
-        hour: Hour (0-23). If None, uses current time.
-    
-    Returns:
-        Adjusted signal (can be 0.5, 1, -0.5, -1, or 0)
-    """
+    # fallback: 原来的静态逻辑
     if hour is None:
         hour = datetime.now().hour
     
-    # US Session (13-22): best performance
     if 13 <= hour <= 22:
         return signal
-    
-    # Asia Session (1-8): lower returns, reduce position
     elif 1 <= hour <= 8:
-        if signal == 1:
-            return 0.5
-        elif signal == -1:
-            return -0.5
-        return 0
-    
-    # Other hours: no trading
+        return signal * 0.5
     else:
         return 0
+
+
 
 
 # ============================================================
