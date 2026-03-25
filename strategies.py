@@ -346,7 +346,7 @@ def set_dynamic_filter(weights: dict):
 # Time Filter (Layer 3) - 静态版本（fallback）
 # ============================================================
 
-def apply_time_filter(signal: int, hour: Optional[int] = None) -> int:
+def apply_time_filter(signal: int, hour: Optional[int] = None) -> float:
     if _dynamic_filter is not None:
         return _dynamic_filter(signal, hour)
     
@@ -355,12 +355,11 @@ def apply_time_filter(signal: int, hour: Optional[int] = None) -> int:
         hour = datetime.now().hour
     
     if 13 <= hour <= 22:
-        return signal
+        return float(signal)
     elif 1 <= hour <= 8:
         return signal * 0.5
     else:
-        return 0
-
+        return 0.0
 
 
 
