@@ -55,7 +55,7 @@ DATA_DIR = "historical_data"       # Directory with historical data
 HISTORY_DAYS = 30                  # Days of data to load
 
 # Risk parameters
-INITIAL_CAPITAL = 1000000        # Starting capital
+INITIAL_CAPITAL = 50000        # Starting capital
 MAX_POSITION_PCT = 0.20            # Max 20% per coin
 MIN_POSITION_PCT = 0.05            # Min 5% per coin
 
@@ -209,33 +209,31 @@ def aggregate_signals_to_targets(
     current_prices: Dict[str, float],
     total_capital: float
 ) -> Dict[str, float]:
-    """
-    Convert signals to target portfolio weights.
-    """
-    # Get all coins with BUY signals
-    buy_coins = []
-    for coin, (signal, multiplier) in signals.items():
-        if signal > 0 and multiplier > 0:
-            buy_coins.append(coin)
+    # Get all coins with BUY signals AND get their signal strength
+    buy_coins_with_strength = []
+    total_strength = 0.0
     
-    if not buy_coins:
+    for coin, (signal, multiplier) in signals.items():
+        # signal 现在可能是 0.094（经过时间过滤后的值）
+        if signal > 0 and multiplier > 0:
+            strength = signal * multiplier  # 信号强度
+            buy_coins_with_strength.append((coin, strength))
+            total_strength += strength
+    
+    if not buy_coins_with_strength:
         logger.info("No BUY signals, holding cash")
         return {}
     
-    # Equal weight among buy signals (simplified)
-    weight_per_coin = (1 - TARGET_CASH) / len(buy_coins)
-    
-    # Apply risk multiplier
+    # 按信号强度分配权重
     targets = {}
-    for coin in buy_coins:
-        signal, multiplier = signals[coin]
-        adjusted_weight = weight_per_coin * multiplier
+    for coin, strength in buy_coins_with_strength:
+        weight = (1 - TARGET_CASH) * (strength / total_strength)
         # Cap individual weight
-        adjusted_weight = min(adjusted_weight, MAX_POSITION_PCT)
-        adjusted_weight = max(adjusted_weight, MIN_POSITION_PCT)
+        weight = min(weight, MAX_POSITION_PCT)
+        weight = max(weight, MIN_POSITION_PCT)
         
         if coin in current_prices:
-            targets[coin] = adjusted_weight
+            targets[coin] = weight
     
     # Add cash
     targets['cash'] = TARGET_CASH
