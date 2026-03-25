@@ -26,7 +26,7 @@ import numpy as np
 _PRECISION_CACHE = {}
 
 def _get_precision(pair: str) -> int:
-    """get precision of coin and reload"""
+    """获取币的精度，缓存结果"""
     global _PRECISION_CACHE
     if pair in _PRECISION_CACHE:
         return _PRECISION_CACHE[pair]
@@ -386,7 +386,7 @@ class TradingExecutor:
             pair = f"{coin}/USD"
             if pair in price_data:
                 current_price = price_data[pair]
-                if self.risk_manager.check_per_coin_stop(coin, current_price):
+                if self.risk_manager.check_trailing_stop(coin, current_price):
                     # if start stop loss we sell them all
                     logger.warning(f"🛑 STOP LOSS TRIGGERED: Selling all {coin}")
                     result = place_order(coin, 'SELL', qty)
