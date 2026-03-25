@@ -448,7 +448,7 @@ def get_signal_for_coin_simple(
     coin: str,
     df: pd.DataFrame,
     risk_manager: RiskManager
-) -> Tuple[int, float]:
+) -> Tuple[float, float]:
     """
     Simplified signal function for main.py to use.
     Returns: (signal, position_size_multiplier)
