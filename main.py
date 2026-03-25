@@ -55,7 +55,7 @@ DATA_DIR = "historical_data"       # Directory with historical data
 HISTORY_DAYS = 30                  # Days of data to load
 
 # Risk parameters
-INITIAL_CAPITAL = 1000000        # Starting capital
+INITIAL_CAPITAL = 50000        # Starting capital
 MAX_POSITION_PCT = 0.20            # Max 20% per coin
 MIN_POSITION_PCT = 0.05            # Min 5% per coin
 
@@ -213,12 +213,17 @@ def aggregate_signals_to_targets(
     buy_coins_with_strength = []
     total_strength = 0.0
     
+    logger.info(f"Original Signal: {[(c, s) for c, (s, m) in signals.items() if s > 0]}")
+
     for coin, (signal, multiplier) in signals.items():
         # signal 现在可能是 0.094（经过时间过滤后的值）
         if signal > 0 and multiplier > 0:
             strength = signal * multiplier  # 信号强度
             buy_coins_with_strength.append((coin, strength))
             total_strength += strength
+    
+    logger.info(f"buy_coins_with_strength: {buy_coins_with_strength}")
+    logger.info(f"total_strength: {total_strength}")
     
     if not buy_coins_with_strength:
         logger.info("No BUY signals, holding cash")
