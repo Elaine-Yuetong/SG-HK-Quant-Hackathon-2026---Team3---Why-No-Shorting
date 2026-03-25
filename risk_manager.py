@@ -177,7 +177,8 @@ class RiskManager:
             self.entry_prices[coin] = avg_price
             self.entry_quantities[coin] = total_qty
             logger.debug(f"Updated avg entry for {coin}: {avg_price:.4f} (qty={total_qty:.4f})")
-            self.highest_prices[coin] = avg_price
+            if price > self.highest_prices.get(coin, 0):
+                self.highest_prices[coin] = price
         else:
             self.entry_prices[coin] = price
             self.entry_quantities[coin] = quantity
