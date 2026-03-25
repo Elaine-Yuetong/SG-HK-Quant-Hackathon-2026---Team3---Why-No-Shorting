@@ -182,7 +182,7 @@ def load_all_coin_data(coins: List[str], lookback_days: int = HISTORY_DAYS) -> D
 def generate_signals_for_coins(
     data: Dict[str, pd.DataFrame],
     risk_manager: RiskManager
-) -> Dict[str, Tuple[int, float]]:
+) -> Dict[str, Tuple[float, float]]:
     """
     Generate trading signals for all coins with data.
     Returns: {coin: (signal, position_multiplier)}
