@@ -78,19 +78,34 @@ def dual_ma_signal(
     slow: int = 20
 ) -> int:
     """
-    Dual Moving Average Crossover Strategy
-    
-    Returns:
-        1: Buy (fast MA > slow MA)
-        -1: Sell (fast MA < slow MA)
-        0: Hold (equal)
+    Dual Moving Average Crossover Strategy with adaptive periods
     """
     if len(df) < slow:
         return 0
     
     close = df['close']
-    ma_fast = close.rolling(window=fast).mean()
-    ma_slow = close.rolling(window=slow).mean()
+    
+    # calculate volatility (recent 20 Kline)
+    returns = close.pct_change().dropna()
+    if len(returns) < 20:
+        vol = 0.01  # default volatility
+    else:
+        vol = returns.tail(20).std()
+    
+    # adjust periotic according to volitility
+    if vol > 0.02:      # high（>2%）
+        fast_adj = fast * 2
+        slow_adj = slow * 2
+    elif vol < 0.005:   # low（<0.5%）
+        fast_adj = max(5, fast // 2)
+        slow_adj = max(10, slow // 2)
+    else:               # normal
+        fast_adj = fast
+        slow_adj = slow
+    
+    # calculate moving average
+    ma_fast = close.rolling(window=fast_adj).mean()
+    ma_slow = close.rolling(window=slow_adj).mean()
     
     if pd.isna(ma_fast.iloc[-1]) or pd.isna(ma_slow.iloc[-1]):
         return 0
@@ -101,7 +116,6 @@ def dual_ma_signal(
         return -1
     else:
         return 0
-
 
 # ============================================================
 # Strategy 2: RSI Oversold/Overbought
