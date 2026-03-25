@@ -53,6 +53,7 @@ class RiskManager:
         self.entry_prices: Dict[str, float] = {}
         # Track per-coin quantities
         self.entry_quantities: Dict[str, float] = {}
+        self.highest_prices: Dict[str, float] = {}  # trailing stop: track highest price
         
         # Load previous state if exists
         self._load_state()
@@ -129,6 +130,34 @@ class RiskManager:
             return True
         
         return False
+
+    def check_trailing_stop(self, coin: str, current_price: float, trail_percent: float = 0.10) -> bool:
+        """
+        Trailing stop loss: sell if price drops X% from peak.
+    
+        Args:
+            coin: Coin symbol
+            current_price: Current market price
+            trail_percent: Trailing stop percentage (default 10%)
+    
+        Returns:
+            True if should sell, False otherwise
+        """
+        highest = self.highest_prices.get(coin, current_price)
+    
+        # Update highest price
+        if current_price > highest:
+            self.highest_prices[coin] = current_price
+            highest = current_price
+    
+        # Check drawdown from peak
+        drawdown = (highest - current_price) / highest
+    
+        if drawdown >= trail_percent:
+            logger.warning(f"🔴 TRAILING STOP: {coin} down {drawdown:.2%} from peak {highest:.4f}")
+            return True
+    
+        return False
     
     def record_entry(self, coin: str, price: float, quantity: float = 1.0):
         """
@@ -148,10 +177,12 @@ class RiskManager:
             self.entry_prices[coin] = avg_price
             self.entry_quantities[coin] = total_qty
             logger.debug(f"Updated avg entry for {coin}: {avg_price:.4f} (qty={total_qty:.4f})")
+            self.highest_prices[coin] = avg_price
         else:
             self.entry_prices[coin] = price
             self.entry_quantities[coin] = quantity
             logger.debug(f"Recorded entry for {coin} @ ${price:.4f}, qty={quantity:.4f}")
+            self.highest_prices[coin] = price
     
     def record_exit(self, coin: str, quantity: float = None):
         """
@@ -165,13 +196,15 @@ class RiskManager:
             return
         
         if quantity is None or quantity >= self.entry_quantities.get(coin, 0):
-            # 全卖，直接删除
+            # Full exit, delete all records
             del self.entry_prices[coin]
             if coin in self.entry_quantities:
                 del self.entry_quantities[coin]
+            if coin in self.highest_prices:
+                del self.highest_prices[coin]
             logger.debug(f"Removed entry for {coin} (full exit)")
         else:
-            # 部分卖出，减少数量
+            # Partial exit, reduce quantity only
             old_qty = self.entry_quantities.get(coin, 0)
             new_qty = old_qty - quantity
             self.entry_quantities[coin] = new_qty
