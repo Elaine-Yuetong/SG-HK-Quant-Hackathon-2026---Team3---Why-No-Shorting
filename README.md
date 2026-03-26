@@ -14,6 +14,7 @@ This bot is designed for the Roostoo trading competition. Instead of using a one
 
 ## 🏗️ System Architecture
 
+```
 Layer 1: 5 Base Strategies
 Dual MA | MACD | RSI | Bollinger Bands | Volume MA
 ↓
@@ -30,6 +31,7 @@ Layer 5: Risk Management
 Trailing stop | Daily loss limit | Total loss limit | Drawdown protection
 ↓
 Execution
+```
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
