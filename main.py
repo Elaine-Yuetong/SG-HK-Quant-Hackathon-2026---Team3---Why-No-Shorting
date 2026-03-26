@@ -216,9 +216,9 @@ def aggregate_signals_to_targets(
     logger.info(f"Original Signal: {[(c, s) for c, (s, m) in signals.items() if s > 0]}")
 
     for coin, (signal, multiplier) in signals.items():
-        # signal 现在可能是 0.094（经过时间过滤后的值）
+        # Signal may be 0.094 (after time filtering)
         if signal > 0 and multiplier > 0:
-            strength = signal * multiplier  # 信号强度
+            strength = signal * multiplier  # signal strength
             buy_coins_with_strength.append((coin, strength))
             total_strength += strength
     
@@ -229,7 +229,7 @@ def aggregate_signals_to_targets(
         logger.info("No BUY signals, holding cash")
         return {}
     
-    # 按信号强度分配权重
+    # Allocate weights by signal strength
     targets = {}
     for coin, strength in buy_coins_with_strength:
         weight = (1 - TARGET_CASH) * (strength / total_strength)
@@ -301,7 +301,7 @@ class TradingBot:
         # Track portfolio value over time
         self.portfolio_history = []
 
-        # ========== 动态时间权重初始化 ==========
+        # ========== Initialize dynamic time weights ==========
         from time_weight import calculate_hourly_weight
         from strategies import set_dynamic_filter
         try:
@@ -313,7 +313,7 @@ class TradingBot:
             logger.warning(f"⚠️ Failed to set dynamic filter: {e}, using static fallback")
         # =========================================
 
-        # ========== 添加这段 ==========
+      
         # Start dashboard in background thread
         self._start_dashboard()
         # ============================
