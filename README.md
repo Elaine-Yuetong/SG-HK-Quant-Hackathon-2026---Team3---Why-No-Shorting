@@ -247,7 +247,7 @@ This multi‑layer approach ensures:
 
 | Member | Contribution |
 |--------|--------------|
-| Yuetong Wei(Elaine)| Main trading logic, strategy integration, QUBO optimization, risk management, dynamic time filter, dashboard, deployment, testing, documentation |
+| Yuetong Wei(Elaine)| Main trading logic, all strategy and strategy integration, QUBO optimization, risk management, dynamic time filter, dashboard, deployment, testing, documentation |
 | Dorjderem Namsraijav | Data pipeline: `binance_symbols.py`, `config.py`, `download_history.py`, `roostoo_client.py` – fetching and validating historical data |
 
 
