@@ -15,22 +15,22 @@ This bot is designed for the Roostoo trading competition. Instead of using a one
 ## 🏗️ System Architecture
 
 ```
-Layer 1: 5 Base Strategies
+         Layer 1: 5 Base Strategies
 Dual MA | MACD | RSI | Bollinger Bands | Volume MA
-↓
-Layer 2: Per‑Coin Strategy Selection
+                     ↓
+    Layer 2: Per‑Coin Strategy Selection
 Each coin uses its best strategy from 90‑day backtest
-↓
-Layer 3: Dynamic Time Filter
+                     ↓
+        Layer 3: Dynamic Time Filter
 Combines 90‑day + 7‑day data → hourly position weights
-↓
-Layer 4: QUBO Portfolio Optimization
+                     ↓
+     Layer 4: QUBO Portfolio Optimization
 Selects optimal coin set: maximize return, minimize correlation
-↓
-Layer 5: Risk Management
+                     ↓
+          Layer 5: Risk Management
 Trailing stop | Daily loss limit | Total loss limit | Drawdown protection
-↓
-Execution
+                     ↓
+                 Execution
 ```
 
 ```
