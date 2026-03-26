@@ -22,11 +22,11 @@ import os
 from loguru import logger
 import pandas as pd
 import numpy as np
-# 精度缓存
+# precision loading
 _PRECISION_CACHE = {}
 
 def _get_precision(pair: str) -> int:
-    """获取币的精度，缓存结果"""
+    """Get coin precision, cache results"""
     global _PRECISION_CACHE
     if pair in _PRECISION_CACHE:
         return _PRECISION_CACHE[pair]
@@ -42,7 +42,7 @@ def _get_precision(pair: str) -> int:
     except Exception as e:
         logger.warning(f"Failed to get precision for {pair}: {e}")
     
-    return 6  # 默认6位
+    return 6  # default 6 digits
 
 # Import our modules
 from config import ROOSTOO_BASE_URL, ROOSTOO_API_KEY, ROOSTOO_SECRET_KEY
