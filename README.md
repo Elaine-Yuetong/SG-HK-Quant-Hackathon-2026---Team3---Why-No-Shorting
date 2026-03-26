@@ -108,7 +108,19 @@ Not all coins behave the same. We backtested 5 strategies on 66 coins over 90 da
 
 **Key insight**: Dual MA works well for most coins (85% beat buy‑and‑hold), while RSI and MACD deliver explosive returns on specific high‑volatility coins. Each coin uses its own best strategy — no one‑size‑fits‑all.
 
-### 2. Dynamic Time Filter
+### 2. Data-Driven Strategy Design
+
+Rather than guessing which strategy works best, we let the data decide.
+
+We backtested **5 strategies × 66 coins × all parameter combinations** over 90 days of 1‑minute data — over **20,000 individual backtests**. This rigorous approach revealed:
+
+- **Dual MA is the most consistent**: 85% of coins beat buy‑and‑hold, with average loss of only -0.84% in a -26% market.
+- **MACD and RSI are explosive but selective**: They deliver 100–2800% returns on specific coins (FLOKI, 1000CHEEMS, WIF, EIGEN), but underperform on most others.
+- **No universal strategy exists**: A one‑size‑fits‑all approach would have lost money. Each coin needs its own.
+
+The final configuration (17 coins, each with its best strategy) is not an opinion — it’s the direct output of exhaustive backtesting.
+
+### 3. Dynamic Time Filter
 Instead of fixed US/Asia session rules, we compute **hourly returns** using both **90‑day long‑term** and **7‑day short‑term** data. The final weight for each hour is a dynamic combination:
 
 - High volatility → lower weight
@@ -116,7 +128,7 @@ Instead of fixed US/Asia session rules, we compute **hourly returns** using both
 
 This allows the bot to **automatically adapt** to changing market micro‑structures.
 
-### 3. QUBO Portfolio Optimization
+### 4. QUBO Portfolio Optimization
 We formulate portfolio selection as a QUBO problem:
 
 H = –∑(αᵢ·xᵢ) + λ·∑(ρᵢⱼ·xᵢ·xⱼ) + P·(∑xᵢ – n)²
@@ -128,7 +140,7 @@ H = –∑(αᵢ·xᵢ) + λ·∑(ρᵢⱼ·xᵢ·xⱼ) + P·(∑xᵢ – n)²
 
 The optimizer selects a set of coins that **maximizes expected return while minimizing correlation** – mathematically ensuring diversification.
 
-### 4. Trailing Stop Loss
+### 5. Trailing Stop Loss
 Unlike a fixed stop loss, the trailing stop follows the highest price ever reached:
 
 - Price rises → stop line rises
@@ -137,7 +149,7 @@ Unlike a fixed stop loss, the trailing stop follows the highest price ever reach
 
 This locks in profits while still letting winners run.
 
-### 5. Adaptive MA Periods
+### 6. Adaptive MA Periods
 The Dual MA strategy dynamically adjusts its periods based on recent volatility:
 
 - High volatility (`>2%`) → longer periods (filter noise)
