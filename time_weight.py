@@ -1,7 +1,7 @@
 """
 time_weight.py
-动态时间权重模块
-结合90天长期数据和7天短期数据，动态计算每个小时的最佳仓位权重
+Dynamic time weight module
+Combines 90-day long-term data and 7-day short-term data to dynamically calculate optimal position weight for each hour
 """
 
 import pandas as pd
@@ -11,8 +11,8 @@ from datetime import datetime, timedelta
 from loguru import logger
 
 DATA_DIR = "historical_data"
-LONG_DAYS = 90      # 长期数据天数
-SHORT_DAYS = 7      # 短期数据天数
+LONG_DAYS = 90      # Long-term data days
+SHORT_DAYS = 7      # Short-term data days
 
 
 def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
@@ -22,7 +22,9 @@ def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
     """
     clean_coin = coin.replace('/', '').replace('-', '').replace('USD', '')
     
-    # 尝试匹配文件名
+    # Try to match filename
+    # Only keep last N days
+    # Calculate hourly return
     possible_files = [
         Path(DATA_DIR) / f"{clean_coin}USDT_1m.csv",
         Path(DATA_DIR) / f"{clean_coin}_1m.csv",
@@ -40,7 +42,7 @@ def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
     
     df['open_time'] = pd.to_datetime(df['open_time'])
     
-    # 只取最近N天
+    # only take latest n days
     cutoff = df['open_time'].max() - timedelta(days=days)
     df = df[df['open_time'] >= cutoff]
     
@@ -48,7 +50,7 @@ def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
         logger.warning(f"Insufficient data for {coin} (need {days} days)")
         return pd.Series()
     
-    # 计算每小时收益率
+    # calculate interest rate per hour
     df['hour'] = df['open_time'].dt.hour
     hourly_close = df.groupby('hour')['close'].last()
     hourly_return = hourly_close.pct_change().fillna(0)
@@ -58,28 +60,28 @@ def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
 
 def calculate_dynamic_ratio(short_ret: float, long_ret: float, short_vol: float) -> float:
     """
-    动态计算短期权重
-    短期波动大 → 降低短期权重
-    短期表现稳定且好 → 提高短期权重
+    Dynamically calculate short-term weight
+    High short-term volatility → lower short-term weight
+    Stable and profitable short-term → higher short-term weight
     
     Args:
-        short_ret: 短期平均收益率
-        long_ret: 长期平均收益率
-        short_vol: 短期收益率波动率
+        short_ret: Short-term average return
+        long_ret: Long-term average return
+        short_vol: Short-term return volatility
     
     Returns:
-        短期权重 (0-1)
+        Short-term weight (0-1)
     """
-    # 如果短期波动太大，降低权重
+    # If short-term volatility is too high, reduce weight
     if short_vol > 0.05:
         return 0.2
-    # 如果短期稳定且赚钱，提高权重
+    # If short-term is stable and profitable, increase weight
     elif short_vol < 0.02 and short_ret > 0:
         return 0.7
-    # 短期赚钱但波动中等
+    # Short-term profitable but moderate volatility
     elif short_ret > 0:
         return 0.5
-    # 短期亏钱
+    #Short-term losing
     elif short_ret < 0:
         return 0.3
     else:
@@ -88,10 +90,10 @@ def calculate_dynamic_ratio(short_ret: float, long_ret: float, short_vol: float)
 
 def calculate_hourly_weight(coins: list) -> dict:
     """
-    计算每个小时的平均权重
-    结合长期(90天)和短期(7天)数据，动态计算权重
+    Calculate average weight for each hour
+    Combine long-term (90-day) and short-term (7-day) data, dynamically calculate weights
     
-    返回: {0: 0.2, 1: 0.3, ...} 小时 -> 权重 (0-1)
+    Returns: {0: 0.2, 1: 0.3, ...} hour -> weight (0-1)
     """
     all_long_returns = []
     all_short_returns = []
@@ -111,7 +113,7 @@ def calculate_hourly_weight(coins: list) -> dict:
         logger.warning("No long-term data for any coin, using default weights")
         return {h: 0.5 for h in range(24)}
     
-    # 计算所有币的平均收益率（按小时）
+    # Calculate average return across all coins (by hour)
     long_avg = pd.concat(all_long_returns, axis=1).mean(axis=1)
     
     weights = {}
@@ -119,22 +121,22 @@ def calculate_hourly_weight(coins: list) -> dict:
     if all_short_returns:
         short_avg = pd.concat(all_short_returns, axis=1).mean(axis=1)
         
-        # 计算短期波动率（按小时）
+        # Calculate short-term volatility (by hour)
         short_vol = pd.concat(all_short_returns, axis=1).std(axis=1).fillna(0.03)
         
-        # 每个小时独立计算动态权重
+        # Independently calculate dynamic weight for each hour
         for hour in range(24):
             short_ret = short_avg.get(hour, 0.0)
             long_ret = long_avg.get(hour, 0.0)
             vol = short_vol.get(hour, 0.03)
             
-            # 计算动态比例
+            # Calculate dynamic ratio
             ratio = calculate_dynamic_ratio(short_ret, long_ret, vol)
             
-            # 结合长期和短期
+            # Combine long-term and short-term
             combined = ratio * short_ret + (1 - ratio) * long_ret
             
-            # 将收益率转换为权重 (1%收益 = 满仓)
+            # Convert return to weight (1% return = full position)
             if combined > 0:
                 weight = min(1.0, combined / 0.01)
             else:
@@ -142,7 +144,7 @@ def calculate_hourly_weight(coins: list) -> dict:
             
             weights[hour] = weight
     else:
-        # 没有短期数据，只用长期
+        # No short-term data, use only long-term
         for hour, ret in long_avg.items():
             if ret > 0:
                 weights[hour] = min(1.0, ret / 0.01)
@@ -155,7 +157,7 @@ def calculate_hourly_weight(coins: list) -> dict:
 
 def get_dynamic_time_filter(weights: dict):
     """
-    返回一个动态时间过滤函数
+    Return a dynamic time filter function
     """
     def dynamic_filter(signal: int, hour: int = None) -> float:
         if hour is None:
@@ -167,7 +169,7 @@ def get_dynamic_time_filter(weights: dict):
 
 
 # ============================================================
-# 简单测试
+# simple test
 # ============================================================
 if __name__ == "__main__":
     test_coins = [
