@@ -241,7 +241,7 @@ This multi‑layer approach ensures:
 
 
 ## 📅 Competition Period
-March 16 – April 16, 2026
+First Round: March 14 – March 27, 2026
 
 ## 🙏 Acknowledgments
 Roostoo for providing the trading API and competition platform
