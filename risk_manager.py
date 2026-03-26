@@ -49,7 +49,7 @@ class RiskManager:
         self.is_killed = False
         self.kill_reason = None
         
-        # Track per-coin entry prices (加权平均成本)
+        # Track per-coin entry prices (Weighted average cost)
         self.entry_prices: Dict[str, float] = {}
         # Track per-coin quantities
         self.entry_quantities: Dict[str, float] = {}
@@ -67,7 +67,7 @@ class RiskManager:
                     self.peak_capital = data.get('peak_capital', self.initial_capital)
                     self.is_killed = data.get('is_killed', False)
                     self.kill_reason = data.get('kill_reason', None)
-                    # 加载持仓数据
+                    # Load position data
                     self.entry_prices = data.get('entry_prices', {})
                     self.entry_quantities = data.get('entry_quantities', {})
                     logger.info(f"Loaded risk state: peak={self.peak_capital}, killed={self.is_killed}")
@@ -169,7 +169,7 @@ class RiskManager:
             quantity: Quantity bought (default 1.0)
         """
         if coin in self.entry_prices:
-            # 已有持仓，计算加权平均
+            # Existing position, calculate weighted average
             old_price = self.entry_prices[coin]
             old_qty = self.entry_quantities.get(coin, 0)
             total_qty = old_qty + quantity
