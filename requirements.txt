@@ -18,3 +18,4 @@ yfinance>=0.2.0
 
 # Optional (for advanced calculations)
 scikit-learn>=1.0.0
+statsmodels>=0.14.0
