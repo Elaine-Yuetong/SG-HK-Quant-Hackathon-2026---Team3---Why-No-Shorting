@@ -49,7 +49,7 @@ class RiskManager:
         self.is_killed = False
         self.kill_reason = None
         
-        # Track per-coin entry prices (Weighted average cost)
+        # Track per-coin entry prices (加权平均成本)
         self.entry_prices: Dict[str, float] = {}
         # Track per-coin quantities
         self.entry_quantities: Dict[str, float] = {}
@@ -67,7 +67,7 @@ class RiskManager:
                     self.peak_capital = data.get('peak_capital', self.initial_capital)
                     self.is_killed = data.get('is_killed', False)
                     self.kill_reason = data.get('kill_reason', None)
-                    # Load position data
+                    # 加载持仓数据
                     self.entry_prices = data.get('entry_prices', {})
                     self.entry_quantities = data.get('entry_quantities', {})
                     logger.info(f"Loaded risk state: peak={self.peak_capital}, killed={self.is_killed}")
@@ -97,8 +97,8 @@ class RiskManager:
         today = date.today()
         if self.current_day != today:
             self.current_day = today
-            self.day_start_capital = current_capital
-            logger.info(f"New day started. Daily start capital: ${current_capital:,.2f}")
+            self.day_start_capital = current_capital if current_capital > 1.0 else self.initial_capital
+            logger.info(f"New day started. Daily start capital: ${self.day_start_capital:,.2f}")
     
     def check_per_coin_stop(
         self, 
@@ -169,7 +169,7 @@ class RiskManager:
             quantity: Quantity bought (default 1.0)
         """
         if coin in self.entry_prices:
-            # Existing position, calculate weighted average
+            # 已有持仓，计算加权平均
             old_price = self.entry_prices[coin]
             old_qty = self.entry_quantities.get(coin, 0)
             total_qty = old_qty + quantity
@@ -234,7 +234,7 @@ class RiskManager:
             return True, f"Cooldown active for {remaining:.1f} more hours"
         
         # 1. Daily loss limit
-        if self.day_start_capital > 0:
+        if self.day_start_capital > 1.0:  # 确保至少 $1
             daily_loss = (self.day_start_capital - current_capital) / self.day_start_capital
             if daily_loss > self.daily_loss_limit:
                 self.is_killed = True
@@ -242,6 +242,9 @@ class RiskManager:
                 self.cooldown_until = datetime.now() + timedelta(hours=self.cooldown_hours)
                 self._save_state()
                 return True, self.kill_reason
+        else:
+        # 如果 day_start_capital 不合理，重置为当前资本
+            self.day_start_capital = current_capital
         
         # 2. Total loss limit
         if self.initial_capital > 0:
