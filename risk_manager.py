@@ -16,7 +16,7 @@ class RiskManager:
     Multi-layer risk management system.
     
     Layers:
-        1. Per-coin stop loss (加权平均成本)
+        1. Per-coin stop loss (weighted average)
         2. Daily loss limit (kill switch)
         3. Total loss limit (kill switch)
         4. Drawdown protection (reduce positions)
@@ -169,7 +169,7 @@ class RiskManager:
             quantity: Quantity bought (default 1.0)
         """
         if coin in self.entry_prices:
-            # 已有持仓，计算加权平均
+            # Existing position, calculate weighted average
             old_price = self.entry_prices[coin]
             old_qty = self.entry_quantities.get(coin, 0)
             total_qty = old_qty + quantity
@@ -234,7 +234,7 @@ class RiskManager:
             return True, f"Cooldown active for {remaining:.1f} more hours"
         
         # 1. Daily loss limit
-        if self.day_start_capital > 1.0:  # 确保至少 $1
+        if self.day_start_capital > 1.0:  # make sure at least $1
             daily_loss = (self.day_start_capital - current_capital) / self.day_start_capital
             if daily_loss > self.daily_loss_limit:
                 self.is_killed = True
@@ -243,7 +243,7 @@ class RiskManager:
                 self._save_state()
                 return True, self.kill_reason
         else:
-        # 如果 day_start_capital 不合理，重置为当前资本
+        # if day_start_capital is not reasonable，reset as recent asset
             self.day_start_capital = current_capital
         
         # 2. Total loss limit
