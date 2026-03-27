@@ -17,8 +17,12 @@ SHORT_DAYS = 7      # Short-term data days
 
 def load_hourly_pnl(coin: str, days: int = LONG_DAYS) -> pd.Series:
     """
-    加载某个币过去N天的1分钟数据，计算每小时收益率
-    返回: Series, index=小时(0-23), value=收益率
+     
+    Load 1-minute data for a coin over the past N days and calculate hourly returns.
+    
+    Returns:
+        Series with hour (0-23) as index and return percentage as value
+    
     """
     clean_coin = coin.replace('/', '').replace('-', '').replace('USD', '')
     
