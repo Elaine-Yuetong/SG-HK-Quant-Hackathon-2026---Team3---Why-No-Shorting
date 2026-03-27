@@ -304,7 +304,7 @@ class TradingExecutor:
         total = cash
         prices = get_current_prices(list(holdings.keys()))
     
-        # 调试
+        # adjust method
         logger.info(f"Holdings: {holdings}")
         logger.info(f"Prices keys: {list(prices.keys())}")
     
