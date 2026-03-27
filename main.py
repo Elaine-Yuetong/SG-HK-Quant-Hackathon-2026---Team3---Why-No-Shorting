@@ -55,7 +55,7 @@ DATA_DIR = "historical_data"       # Directory with historical data
 HISTORY_DAYS = 30                  # Days of data to load
 
 # Risk parameters
-INITIAL_CAPITAL = 1000000       # Starting capital
+INITIAL_CAPITAL = 1000000        # Starting capital
 MAX_POSITION_PCT = 0.20            # Max 20% per coin
 MIN_POSITION_PCT = 0.05            # Min 5% per coin
 
@@ -138,6 +138,7 @@ def load_coin_data(coin: str, lookback_days: int = HISTORY_DAYS) -> Optional[pd.
     
     # Try different filename patterns
     possible_files = [
+        Path(DATA_DIR) / f"{clean_coin}_1m.csv",
         Path(DATA_DIR) / f"{clean_coin}USDT_1m.csv",
         Path(DATA_DIR) / f"{clean_coin}_1m.csv",
         Path(DATA_DIR) / f"{coin}_1m.csv",
@@ -181,7 +182,7 @@ def load_all_coin_data(coins: List[str], lookback_days: int = HISTORY_DAYS) -> D
 def generate_signals_for_coins(
     data: Dict[str, pd.DataFrame],
     risk_manager: RiskManager
-) -> Dict[str, Tuple[int, float]]:
+) -> Dict[str, Tuple[float, float]]:
     """
     Generate trading signals for all coins with data.
     Returns: {coin: (signal, position_multiplier)}
@@ -208,33 +209,36 @@ def aggregate_signals_to_targets(
     current_prices: Dict[str, float],
     total_capital: float
 ) -> Dict[str, float]:
-    """
-    Convert signals to target portfolio weights.
-    """
-    # Get all coins with BUY signals
-    buy_coins = []
-    for coin, (signal, multiplier) in signals.items():
-        if signal > 0 and multiplier > 0:
-            buy_coins.append(coin)
+    # Get all coins with BUY signals AND get their signal strength
+    buy_coins_with_strength = []
+    total_strength = 0.0
     
-    if not buy_coins:
+    logger.info(f"Original Signal: {[(c, s) for c, (s, m) in signals.items() if s > 0]}")
+
+    for coin, (signal, multiplier) in signals.items():
+        # Signal may be 0.094 (after time filtering)
+        if signal > 0 and multiplier > 0:
+            strength = signal * multiplier  # signal strength
+            buy_coins_with_strength.append((coin, strength))
+            total_strength += strength
+    
+    logger.info(f"buy_coins_with_strength: {buy_coins_with_strength}")
+    logger.info(f"total_strength: {total_strength}")
+    
+    if not buy_coins_with_strength:
         logger.info("No BUY signals, holding cash")
         return {}
     
-    # Equal weight among buy signals (simplified)
-    weight_per_coin = (1 - TARGET_CASH) / len(buy_coins)
-    
-    # Apply risk multiplier
+    # Allocate weights by signal strength
     targets = {}
-    for coin in buy_coins:
-        signal, multiplier = signals[coin]
-        adjusted_weight = weight_per_coin * multiplier
+    for coin, strength in buy_coins_with_strength:
+        weight = (1 - TARGET_CASH) * (strength / total_strength)
         # Cap individual weight
-        adjusted_weight = min(adjusted_weight, MAX_POSITION_PCT)
-        adjusted_weight = max(adjusted_weight, MIN_POSITION_PCT)
+        weight = min(weight, MAX_POSITION_PCT)
+        weight = max(weight, MIN_POSITION_PCT)
         
         if coin in current_prices:
-            targets[coin] = adjusted_weight
+            targets[coin] = weight
     
     # Add cash
     targets['cash'] = TARGET_CASH
@@ -297,7 +301,19 @@ class TradingBot:
         # Track portfolio value over time
         self.portfolio_history = []
 
-        # ========== 添加这段 ==========
+        # ========== Initialize dynamic time weights ==========
+        from time_weight import calculate_hourly_weight
+        from strategies import set_dynamic_filter
+        try:
+            logger.info("Calculating dynamic time weights...")
+            weights = calculate_hourly_weight(get_all_tradable_coins())
+            set_dynamic_filter(weights)
+            logger.info("✅ Dynamic time filter enabled")
+        except Exception as e:
+            logger.warning(f"⚠️ Failed to set dynamic filter: {e}, using static fallback")
+        # =========================================
+
+      
         # Start dashboard in background thread
         self._start_dashboard()
         # ============================

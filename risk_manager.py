@@ -3,10 +3,12 @@ risk_manager.py
 Risk management: stop loss, kill switch, position sizing, drawdown protection.
 """
 
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 from typing import Dict, Optional, Tuple
 import json
 import os
+import numpy as np
+from loguru import logger
 
 
 class RiskManager:
@@ -14,7 +16,7 @@ class RiskManager:
     Multi-layer risk management system.
     
     Layers:
-        1. Per-coin stop loss
+        1. Per-coin stop loss (weighted average)
         2. Daily loss limit (kill switch)
         3. Total loss limit (kill switch)
         4. Drawdown protection (reduce positions)
@@ -47,8 +49,11 @@ class RiskManager:
         self.is_killed = False
         self.kill_reason = None
         
-        # Track per-coin entry prices
+        # Track per-coin entry prices (Weight average Cost)
         self.entry_prices: Dict[str, float] = {}
+        # Track per-coin quantities
+        self.entry_quantities: Dict[str, float] = {}
+        self.highest_prices: Dict[str, float] = {}  # trailing stop: track highest price
         
         # Load previous state if exists
         self._load_state()
@@ -62,7 +67,12 @@ class RiskManager:
                     self.peak_capital = data.get('peak_capital', self.initial_capital)
                     self.is_killed = data.get('is_killed', False)
                     self.kill_reason = data.get('kill_reason', None)
+                    #  Load position data
+                    self.entry_prices = data.get('entry_prices', {})
+                    self.entry_quantities = data.get('entry_quantities', {})
                     logger.info(f"Loaded risk state: peak={self.peak_capital}, killed={self.is_killed}")
+                    if self.entry_prices:
+                        logger.info(f"  Active positions: {len(self.entry_prices)}")
             except Exception as e:
                 logger.warning(f"Failed to load risk state: {e}")
     
@@ -73,6 +83,8 @@ class RiskManager:
                 'peak_capital': self.peak_capital,
                 'is_killed': self.is_killed,
                 'kill_reason': self.kill_reason,
+                'entry_prices': self.entry_prices,
+                'entry_quantities': self.entry_quantities,
                 'timestamp': datetime.now().isoformat()
             }
             with open(self.state_file, 'w') as f:
@@ -85,8 +97,8 @@ class RiskManager:
         today = date.today()
         if self.current_day != today:
             self.current_day = today
-            self.day_start_capital = current_capital
-            logger.info(f"New day started. Daily start capital: ${current_capital:,.2f}")
+            self.day_start_capital = current_capital if current_capital > 1.0 else self.initial_capital
+            logger.info(f"New day started. Daily start capital: ${self.day_start_capital:,.2f}")
     
     def check_per_coin_stop(
         self, 
@@ -100,7 +112,7 @@ class RiskManager:
         Args:
             coin: Coin symbol
             current_price: Current market price
-            entry_price: Entry price (uses stored if not provided)
+            entry_price: Entry price (uses stored weighted avg if not provided)
         
         Returns:
             True if should sell, False otherwise
@@ -114,20 +126,90 @@ class RiskManager:
         loss_pct = (entry_price - current_price) / entry_price
         
         if loss_pct >= self.per_coin_stop_loss:
-            logger.warning(f"🔴 STOP LOSS: {coin} down {loss_pct:.2%} (limit {self.per_coin_stop_loss:.2%})")
+            logger.warning(f"🔴 STOP LOSS: {coin} down {loss_pct:.2%} (limit {self.per_coin_stop_loss:.2%}), entry={entry_price:.4f}, current={current_price:.4f}")
             return True
         
         return False
+
+    def check_trailing_stop(self, coin: str, current_price: float, trail_percent: float = 0.10) -> bool:
+        """
+        Trailing stop loss: sell if price drops X% from peak.
     
-    def record_entry(self, coin: str, price: float):
-        """Record entry price for stop loss tracking"""
-        self.entry_prices[coin] = price
-        logger.debug(f"Recorded entry for {coin} @ ${price:.2f}")
+        Args:
+            coin: Coin symbol
+            current_price: Current market price
+            trail_percent: Trailing stop percentage (default 10%)
     
-    def record_exit(self, coin: str):
-        """Remove coin from stop loss tracking after selling"""
+        Returns:
+            True if should sell, False otherwise
+        """
+        highest = self.highest_prices.get(coin, current_price)
+    
+        # Update highest price
+        if current_price > highest:
+            self.highest_prices[coin] = current_price
+            highest = current_price
+    
+        # Check drawdown from peak
+        drawdown = (highest - current_price) / highest
+    
+        if drawdown >= trail_percent:
+            logger.warning(f"🔴 TRAILING STOP: {coin} down {drawdown:.2%} from peak {highest:.4f}")
+            return True
+    
+        return False
+    
+    def record_entry(self, coin: str, price: float, quantity: float = 1.0):
+        """
+        Record entry price for stop loss tracking (加权平均成本).
+        
+        Args:
+            coin: Coin symbol
+            price: Entry price
+            quantity: Quantity bought (default 1.0)
+        """
         if coin in self.entry_prices:
+            # Existing position, calculate weighted average
+            old_price = self.entry_prices[coin]
+            old_qty = self.entry_quantities.get(coin, 0)
+            total_qty = old_qty + quantity
+            avg_price = (old_price * old_qty + price * quantity) / total_qty
+            self.entry_prices[coin] = avg_price
+            self.entry_quantities[coin] = total_qty
+            logger.debug(f"Updated avg entry for {coin}: {avg_price:.4f} (qty={total_qty:.4f})")
+            if price > self.highest_prices.get(coin, 0):
+                self.highest_prices[coin] = price
+        else:
+            self.entry_prices[coin] = price
+            self.entry_quantities[coin] = quantity
+            logger.debug(f"Recorded entry for {coin} @ ${price:.4f}, qty={quantity:.4f}")
+            self.highest_prices[coin] = price
+    
+    def record_exit(self, coin: str, quantity: float = None):
+        """
+        Remove coin or update quantity after selling.
+        
+        Args:
+            coin: Coin symbol
+            quantity: Quantity sold (if None, sell all)
+        """
+        if coin not in self.entry_prices:
+            return
+        
+        if quantity is None or quantity >= self.entry_quantities.get(coin, 0):
+            # Full exit, delete all records
             del self.entry_prices[coin]
+            if coin in self.entry_quantities:
+                del self.entry_quantities[coin]
+            if coin in self.highest_prices:
+                del self.highest_prices[coin]
+            logger.debug(f"Removed entry for {coin} (full exit)")
+        else:
+            # Partial exit, reduce quantity only
+            old_qty = self.entry_quantities.get(coin, 0)
+            new_qty = old_qty - quantity
+            self.entry_quantities[coin] = new_qty
+            logger.debug(f"Updated {coin}: remaining qty={new_qty:.4f}")
     
     def check_kill_switch(
         self, 
@@ -152,21 +234,26 @@ class RiskManager:
             return True, f"Cooldown active for {remaining:.1f} more hours"
         
         # 1. Daily loss limit
-        daily_loss = (self.day_start_capital - current_capital) / self.day_start_capital
-        if daily_loss > self.daily_loss_limit:
-            self.is_killed = True
-            self.kill_reason = f"Daily loss {daily_loss:.2%} > limit {self.daily_loss_limit:.2%}"
-            self.cooldown_until = datetime.now() + timedelta(hours=self.cooldown_hours)
-            self._save_state()
-            return True, self.kill_reason
+        if self.day_start_capital > 1.0:  # make sure at least $1
+            daily_loss = (self.day_start_capital - current_capital) / self.day_start_capital
+            if daily_loss > self.daily_loss_limit:
+                self.is_killed = True
+                self.kill_reason = f"Daily loss {daily_loss:.2%} > limit {self.daily_loss_limit:.2%}"
+                self.cooldown_until = datetime.now() + timedelta(hours=self.cooldown_hours)
+                self._save_state()
+                return True, self.kill_reason
+        else:
+        # if day_start_capital is not reasonable，reset as recent asset
+            self.day_start_capital = current_capital
         
         # 2. Total loss limit
-        total_loss = (self.initial_capital - current_capital) / self.initial_capital
-        if total_loss > self.total_loss_limit:
-            self.is_killed = True
-            self.kill_reason = f"Total loss {total_loss:.2%} > limit {self.total_loss_limit:.2%}"
-            self._save_state()
-            return True, self.kill_reason
+        if self.initial_capital > 0:
+            total_loss = (self.initial_capital - current_capital) / self.initial_capital
+            if total_loss > self.total_loss_limit:
+                self.is_killed = True
+                self.kill_reason = f"Total loss {total_loss:.2%} > limit {self.total_loss_limit:.2%}"
+                self._save_state()
+                return True, self.kill_reason
         
         return False, "OK"
     
@@ -182,7 +269,10 @@ class RiskManager:
             self.peak_capital = current_capital
             self._save_state()
         
-        drawdown = (self.peak_capital - current_capital) / self.peak_capital
+        if self.peak_capital > 0:
+            drawdown = (self.peak_capital - current_capital) / self.peak_capital
+        else:
+            drawdown = 0
         
         if drawdown > self.drawdown_reduce_threshold:
             logger.warning(f"📉 Drawdown {drawdown:.2%} > {self.drawdown_reduce_threshold:.2%} - reducing positions")
@@ -328,12 +418,3 @@ class TradeCostCalculator:
         total_fees = trade_count * avg_trade_value * self.taker_fee * 2
         net_return = gross_return - (total_fees / avg_trade_value)
         return net_return > 0
-
-
-# ============================================================
-# Import needed for timedelta
-# ============================================================
-
-from datetime import timedelta
-import numpy as np
-from loguru import logger

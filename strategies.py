@@ -78,19 +78,34 @@ def dual_ma_signal(
     slow: int = 20
 ) -> int:
     """
-    Dual Moving Average Crossover Strategy
-    
-    Returns:
-        1: Buy (fast MA > slow MA)
-        -1: Sell (fast MA < slow MA)
-        0: Hold (equal)
+    Dual Moving Average Crossover Strategy with adaptive periods
     """
     if len(df) < slow:
         return 0
     
     close = df['close']
-    ma_fast = close.rolling(window=fast).mean()
-    ma_slow = close.rolling(window=slow).mean()
+    
+    # calculate volatility (recent 20 Kline)
+    returns = close.pct_change().dropna()
+    if len(returns) < 20:
+        vol = 0.01  # default volatility
+    else:
+        vol = returns.tail(20).std()
+    
+    # adjust periotic according to volitility
+    if vol > 0.02:      # high（>2%）
+        fast_adj = fast * 2
+        slow_adj = slow * 2
+    elif vol < 0.005:   # low（<0.5%）
+        fast_adj = max(5, fast // 2)
+        slow_adj = max(10, slow // 2)
+    else:               # normal
+        fast_adj = fast
+        slow_adj = slow
+    
+    # calculate moving average
+    ma_fast = close.rolling(window=fast_adj).mean()
+    ma_slow = close.rolling(window=slow_adj).mean()
     
     if pd.isna(ma_fast.iloc[-1]) or pd.isna(ma_slow.iloc[-1]):
         return 0
@@ -101,7 +116,6 @@ def dual_ma_signal(
         return -1
     else:
         return 0
-
 
 # ============================================================
 # Strategy 2: RSI Oversold/Overbought
@@ -313,44 +327,40 @@ def get_signal(
         return 0
 
 
+
+
 # ============================================================
-# Time Filter (Layer 3)
+# Dynamic Time Filter (Layer 3) - Dynamic time filter (adaptive) - uses historical performance to adjust position size per hour
 # ============================================================
 
-def apply_time_filter(signal: int, hour: Optional[int] = None) -> int:
-    """
-    Apply time filter based on Bollinger backtest results
+from time_weight import get_dynamic_time_filter
+
+# 全局动态过滤器（需要在 main.py 初始化时设置）
+_dynamic_filter = None
+
+def set_dynamic_filter(weights: dict):
+    global _dynamic_filter
+    _dynamic_filter = get_dynamic_time_filter(weights)
+
+# ============================================================
+# Time Filter (Layer 3) - Static time filter (fallback) - fixed weights: US session (13-22): 1.0, Asia session (1-8): 0.5, others: 0
+# ============================================================
+
+def apply_time_filter(signal: int, hour: Optional[int] = None) -> float:
+    if _dynamic_filter is not None:
+        return _dynamic_filter(signal, hour)
     
-    Time Filter Performance (90-day backtest):
-    - US Session (13-22): +28.67% - FULL SIGNAL
-    - Asia Session (1-8): +15.31% - HALF SIGNAL
-    - Other hours: NO TRADING
-    
-    Args:
-        signal: Raw signal from strategy (1, -1, 0)
-        hour: Hour (0-23). If None, uses current time.
-    
-    Returns:
-        Adjusted signal (can be 0.5, 1, -0.5, -1, or 0)
-    """
+    # Fallback mechanism: if dynamic filter fails to load, bot automatically uses static filter
     if hour is None:
         hour = datetime.now().hour
     
-    # US Session (13-22): best performance
     if 13 <= hour <= 22:
-        return signal
-    
-    # Asia Session (1-8): lower returns, reduce position
+        return float(signal)
     elif 1 <= hour <= 8:
-        if signal == 1:
-            return 0.5
-        elif signal == -1:
-            return -0.5
-        return 0
-    
-    # Other hours: no trading
+        return signal * 0.5
     else:
-        return 0
+        return 0.0
+
 
 
 # ============================================================
