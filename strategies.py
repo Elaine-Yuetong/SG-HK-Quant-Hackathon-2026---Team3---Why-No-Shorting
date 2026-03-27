@@ -330,7 +330,7 @@ def get_signal(
 
 
 # ============================================================
-# Dynamic Time Filter (Layer 3) - 动态权重
+# Dynamic Time Filter (Layer 3) - Dynamic time filter (adaptive) - uses historical performance to adjust position size per hour
 # ============================================================
 
 from time_weight import get_dynamic_time_filter
@@ -343,14 +343,14 @@ def set_dynamic_filter(weights: dict):
     _dynamic_filter = get_dynamic_time_filter(weights)
 
 # ============================================================
-# Time Filter (Layer 3) - 静态版本（fallback）
+# Time Filter (Layer 3) - Static time filter (fallback) - fixed weights: US session (13-22): 1.0, Asia session (1-8): 0.5, others: 0
 # ============================================================
 
 def apply_time_filter(signal: int, hour: Optional[int] = None) -> float:
     if _dynamic_filter is not None:
         return _dynamic_filter(signal, hour)
     
-    # fallback: 原来的静态逻辑
+    # Fallback mechanism: if dynamic filter fails to load, bot automatically uses static filter
     if hour is None:
         hour = datetime.now().hour
     
